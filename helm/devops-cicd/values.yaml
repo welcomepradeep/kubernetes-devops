@@ -1,0 +1,36 @@
+replicaCount: 3
+
+image:
+
+  repository: pradeepnayak07/kubernetes-devops-platform
+
+  tag: "1"
+
+  pullPolicy: Always
+
+
+service:
+
+  type: ClusterIP
+
+  port: 80
+
+
+ingress:
+
+  enabled: true
+
+  className: nginx
+
+  host: ""
+
+
+resources:
+
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+  limits:
+    cpu: 500m
+    memory: 256Mi

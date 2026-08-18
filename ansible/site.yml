@@ -1,0 +1,80 @@
+---
+############################################################
+# Prepare all Kubernetes nodes
+############################################################
+
+- name: Prepare Kubernetes nodes
+  hosts: k8s_cluster
+  become: true
+
+  roles:
+    - prepare_os
+    - containerd
+    - kubernetes
+
+############################################################
+# Initialize Control Plane
+############################################################
+
+- name: Initialize Kubernetes control plane
+  hosts: control_plane
+  become: true
+
+  roles:
+    - control_plane
+
+############################################################
+# Join Worker Nodes
+############################################################
+
+- name: Join Kubernetes worker nodes
+  hosts: workers
+  become: true
+
+  roles:
+    - worker
+
+############################################################
+# Install Calico
+############################################################
+
+- name: Install Calico CNI
+  hosts: control_plane
+  become: true
+
+  roles:
+    - calico
+
+############################################################
+# Verify Cluster
+############################################################
+
+- name: Verify Kubernetes cluster
+  hosts: control_plane
+  become: true
+
+  tasks:
+
+    - name: Get Kubernetes nodes
+      ansible.builtin.command:
+        cmd: kubectl get nodes -o wide
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+      register: kubernetes_nodes
+      changed_when: false
+
+    - name: Display Kubernetes nodes
+      ansible.builtin.debug:
+        var: kubernetes_nodes.stdout
+
+    - name: Get Kubernetes pods
+      ansible.builtin.command:
+        cmd: kubectl get pods -A
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+      register: kubernetes_pods
+      changed_when: false
+
+    - name: Display Kubernetes pods
+      ansible.builtin.debug:
+        var: kubernetes_pods.stdout

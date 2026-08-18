@@ -1,0 +1,57 @@
+---
+############################################################
+# Check whether cluster is already initialized
+############################################################
+
+- name: Check Kubernetes cluster
+  ansible.builtin.stat:
+    path: /etc/kubernetes/admin.conf
+  register: kubeadm_config
+
+############################################################
+# Initialize Control Plane
+############################################################
+
+- name: Initialize Kubernetes control plane
+  ansible.builtin.command:
+    cmd: >
+      kubeadm init
+      --pod-network-cidr={{ pod_network_cidr }}
+  when: not kubeadm_config.stat.exists
+  register: kubeadm_init
+  changed_when: true
+
+############################################################
+# Configure kubectl for ec2-user
+############################################################
+
+- name: Create .kube directory
+  ansible.builtin.file:
+    path: /home/ec2-user/.kube
+    state: directory
+    owner: ec2-user
+    group: ec2-user
+    mode: '0755'
+
+- name: Copy admin kubeconfig
+  ansible.builtin.copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /home/ec2-user/.kube/config
+    remote_src: true
+    owner: ec2-user
+    group: ec2-user
+    mode: '0600'
+
+############################################################
+# Generate worker join command
+############################################################
+
+- name: Generate kubeadm worker join command
+  ansible.builtin.command:
+    cmd: kubeadm token create --print-join-command
+  register: worker_join_command
+  changed_when: false
+
+- name: Store worker join command
+  ansible.builtin.set_fact:
+    kubeadm_join_command: "{{ worker_join_command.stdout }}"
