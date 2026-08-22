@@ -38,9 +38,9 @@ pipeline {
                 sh '''
                     echo "Running application tests"
 
-                    test -f application/index.html
+                    test -f app/index.html
 
-                    test -f application/Dockerfile
+                    test -f docker/Dockerfile
 
                     echo "Tests passed"
                 '''
@@ -58,7 +58,7 @@ pipeline {
 
                     docker build \
                     -t ${DOCKER_IMAGE}:${IMAGE_TAG} \
-                    application
+                    -f docker/Dockerfile .
 
                 """
 

@@ -38,3 +38,8 @@ variable "ami_id" {
   description = "RHEL 9 AMI ID"
   type        = string
 }
+
+variable "allowed_ssh_cidr" {
+  description = "CIDR allowed to SSH to Kubernetes nodes"
+  type        = string
+}

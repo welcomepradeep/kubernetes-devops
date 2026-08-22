@@ -11,3 +11,5 @@ instance_type = "t3.small"
 key_name = "k8s-lab-key"
 
 ami_id = "ami-0af7e19d7f4a36103"
+
+allowed_ssh_cidr = "YOUR_PUBLIC_IP/32"
