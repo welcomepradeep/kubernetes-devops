@@ -4,6 +4,18 @@ variable "aws_region" {
   default     = "ap-south-1"
 }
 
+variable "project_name" {
+  description = "Project name"
+  type        = string
+  default     = "Kubernetes-DevOps"
+}
+
+variable "environment" {
+  description = "Environment"
+  type        = string
+  default     = "Lab"
+}
+
 variable "vpc_cidr" {
   description = "VPC CIDR"
   type        = string
@@ -11,7 +23,7 @@ variable "vpc_cidr" {
 }
 
 variable "subnet_cidr" {
-  description = "Kubernetes subnet"
+  description = "Kubernetes subnet CIDR"
   type        = string
   default     = "10.0.1.0/24"
 }
@@ -22,24 +34,31 @@ variable "availability_zone" {
   default     = "ap-south-1a"
 }
 
+variable "key_name" {
+  description = "Existing AWS EC2 key pair name"
+  type        = string
+}
+
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string
   default     = "t3.small"
 }
 
-variable "key_name" {
-  description = "Existing AWS EC2 key pair"
+variable "control_plane_private_ip" {
+  description = "Static private IP for Kubernetes control-plane"
   type        = string
+  default     = "10.0.1.10"
 }
 
-
-variable "ami_id" {
-  description = "RHEL 9 AMI ID"
+variable "worker1_private_ip" {
+  description = "Static private IP for Kubernetes worker 1"
   type        = string
+  default     = "10.0.1.11"
 }
 
-variable "allowed_ssh_cidr" {
-  description = "CIDR allowed to SSH to Kubernetes nodes"
+variable "worker2_private_ip" {
+  description = "Static private IP for Kubernetes worker 2"
   type        = string
+  default     = "10.0.1.12"
 }

@@ -1,5 +1,17 @@
-resource "aws_security_group" "k8s" {
+############################################################
+# Automatically detect Terraform runner public IP
+############################################################
 
+data "http" "my_public_ip" {
+  url = "https://checkip.amazonaws.com/"
+}
+
+
+############################################################
+# Security Group
+############################################################
+
+resource "aws_security_group" "k8s" {
   name        = "k8s-lab-sg"
   description = "Security group for Kubernetes lab"
   vpc_id      = aws_vpc.k8s.id
@@ -10,7 +22,7 @@ resource "aws_security_group" "k8s" {
   ##########################################################
 
   ingress {
-    description = "SSH"
+    description = "SSH from Terraform workstation"
 
     from_port = 22
     to_port   = 22
@@ -18,7 +30,7 @@ resource "aws_security_group" "k8s" {
     protocol = "tcp"
 
     cidr_blocks = [
-      var.allowed_ssh_cidr
+      "${chomp(data.http.my_public_ip.response_body)}/32"
     ]
   }
 
@@ -36,8 +48,24 @@ resource "aws_security_group" "k8s" {
     protocol = "tcp"
 
     cidr_blocks = [
-      var.subnet_cidr
+      "${chomp(data.http.my_public_ip.response_body)}/32"
     ]
+  }
+
+
+  ##########################################################
+  # Kubernetes Internal Communication
+  ##########################################################
+
+  ingress {
+    description = "Kubernetes internal traffic"
+
+    from_port = 0
+    to_port   = 0
+
+    protocol = "-1"
+
+    self = true
   }
 
 
@@ -96,28 +124,11 @@ resource "aws_security_group" "k8s" {
 
 
   ##########################################################
-  # Kubernetes internal communication
-  ##########################################################
-
-  ingress {
-    description = "Kubernetes internal traffic"
-
-    from_port = 0
-    to_port   = 65535
-
-    protocol = "-1"
-
-    cidr_blocks = [
-      var.subnet_cidr
-    ]
-  }
-
-
-  ##########################################################
-  # Outbound
+  # All Outbound Traffic
   ##########################################################
 
   egress {
+    description = "Allow all outbound traffic"
 
     from_port = 0
     to_port   = 0
@@ -129,6 +140,10 @@ resource "aws_security_group" "k8s" {
     ]
   }
 
+
+  ##########################################################
+  # Tags
+  ##########################################################
 
   tags = {
     Name = "k8s-lab-sg"
