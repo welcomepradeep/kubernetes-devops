@@ -1,73 +1,84 @@
 ############################################################
-# Automatically detect Terraform runner public IP
-############################################################
-
-data "http" "my_public_ip" {
-  url = "https://checkip.amazonaws.com/"
-}
-
-
-############################################################
-# Security Group
+# Kubernetes Security Group
 ############################################################
 
 resource "aws_security_group" "k8s" {
+
   name        = "k8s-lab-sg"
-  description = "Security group for Kubernetes lab"
+  description = "Security group for Kubernetes control plane and workers"
   vpc_id      = aws_vpc.k8s.id
 
-
   ##########################################################
-  # SSH
+  # SSH from the machine running Terraform
   ##########################################################
 
   ingress {
-    description = "SSH from Terraform workstation"
-
-    from_port = 22
-    to_port   = 22
-
-    protocol = "tcp"
-
-    cidr_blocks = [
-      "${chomp(data.http.my_public_ip.response_body)}/32"
-    ]
+    description = "SSH from anywhere"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
-
 
   ##########################################################
   # Kubernetes API Server
   ##########################################################
 
   ingress {
-    description = "Kubernetes API Server"
-
-    from_port = 6443
-    to_port   = 6443
-
-    protocol = "tcp"
-
-    cidr_blocks = [
-      "${chomp(data.http.my_public_ip.response_body)}/32"
-    ]
+    description = "Kubernetes API server"
+    from_port   = 6443
+    to_port     = 6443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
-
   ##########################################################
-  # Kubernetes Internal Communication
+  # Kubernetes internal communication
   ##########################################################
 
   ingress {
-    description = "Kubernetes internal traffic"
+    description = "Allow Kubernetes nodes to communicate"
 
     from_port = 0
-    to_port   = 0
+    to_port   = 65535
+    protocol  = "tcp"
 
-    protocol = "-1"
-
-    self = true
+    cidr_blocks = [
+      var.vpc_cidr
+    ]
   }
 
+  ##########################################################
+  # UDP internal communication
+  ##########################################################
+
+  ingress {
+    description = "Allow Kubernetes node UDP communication"
+
+    from_port = 0
+    to_port   = 65535
+    protocol  = "udp"
+
+    cidr_blocks = [
+      var.vpc_cidr
+    ]
+  }
+
+  ##########################################################
+  # ICMP
+  ##########################################################
+
+  ingress {
+    description = "Allow ICMP inside VPC"
+
+    from_port = -1
+    to_port   = -1
+    protocol  = "icmp"
+
+    cidr_blocks = [
+      var.vpc_cidr
+    ]
+  }
 
   ##########################################################
   # HTTP
@@ -78,14 +89,12 @@ resource "aws_security_group" "k8s" {
 
     from_port = 80
     to_port   = 80
-
-    protocol = "tcp"
+    protocol  = "tcp"
 
     cidr_blocks = [
       "0.0.0.0/0"
     ]
   }
-
 
   ##########################################################
   # HTTPS
@@ -96,17 +105,15 @@ resource "aws_security_group" "k8s" {
 
     from_port = 443
     to_port   = 443
-
-    protocol = "tcp"
+    protocol  = "tcp"
 
     cidr_blocks = [
       "0.0.0.0/0"
     ]
   }
 
-
   ##########################################################
-  # Kubernetes NodePort
+  # NodePort
   ##########################################################
 
   ingress {
@@ -114,17 +121,15 @@ resource "aws_security_group" "k8s" {
 
     from_port = 30000
     to_port   = 32767
-
-    protocol = "tcp"
+    protocol  = "tcp"
 
     cidr_blocks = [
       "0.0.0.0/0"
     ]
   }
 
-
   ##########################################################
-  # All Outbound Traffic
+  # Outbound
   ##########################################################
 
   egress {
@@ -132,18 +137,12 @@ resource "aws_security_group" "k8s" {
 
     from_port = 0
     to_port   = 0
-
-    protocol = "-1"
+    protocol  = "-1"
 
     cidr_blocks = [
       "0.0.0.0/0"
     ]
   }
-
-
-  ##########################################################
-  # Tags
-  ##########################################################
 
   tags = {
     Name = "k8s-lab-sg"

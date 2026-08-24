@@ -1,64 +1,83 @@
+############################################################
+# AWS Region
+############################################################
+
 variable "aws_region" {
   description = "AWS region"
   type        = string
   default     = "ap-south-1"
 }
 
-variable "project_name" {
-  description = "Project name"
+############################################################
+# Availability Zone
+############################################################
+
+variable "availability_zone" {
+  description = "Availability Zone for Kubernetes lab"
   type        = string
-  default     = "Kubernetes-DevOps"
+  default     = "ap-south-1a"
 }
 
-variable "environment" {
-  description = "Environment"
-  type        = string
-  default     = "Lab"
-}
+############################################################
+# VPC CIDR
+############################################################
 
 variable "vpc_cidr" {
-  description = "VPC CIDR"
+  description = "CIDR block for Kubernetes VPC"
   type        = string
   default     = "10.0.0.0/16"
 }
 
+############################################################
+# Subnet CIDR
+############################################################
+
 variable "subnet_cidr" {
-  description = "Kubernetes subnet CIDR"
+  description = "CIDR block for Kubernetes subnet"
   type        = string
   default     = "10.0.1.0/24"
 }
 
-variable "availability_zone" {
-  description = "Availability zone"
+############################################################
+# AMI
+############################################################
+
+variable "ami_id" {
+  description = "AMI ID for Kubernetes nodes"
   type        = string
-  default     = "ap-south-1a"
 }
+
+############################################################
+# EC2 Instance Type
+############################################################
+
+variable "control_plane_instance_type" {
+  description = "Instance type for Kubernetes control plane"
+  type        = string
+  default     = "t3.small"
+}
+
+variable "worker_instance_type" {
+  description = "Instance type for Kubernetes workers"
+  type        = string
+  default     = "t3.small"
+}
+
+############################################################
+# SSH Key
+############################################################
 
 variable "key_name" {
   description = "Existing AWS EC2 key pair name"
   type        = string
 }
 
-variable "instance_type" {
-  description = "EC2 instance type"
-  type        = string
-  default     = "t3.small"
-}
+############################################################
+# SSH User
+############################################################
 
-variable "control_plane_private_ip" {
-  description = "Static private IP for Kubernetes control-plane"
+variable "ssh_user" {
+  description = "SSH user for EC2"
   type        = string
-  default     = "10.0.1.10"
-}
-
-variable "worker1_private_ip" {
-  description = "Static private IP for Kubernetes worker 1"
-  type        = string
-  default     = "10.0.1.11"
-}
-
-variable "worker2_private_ip" {
-  description = "Static private IP for Kubernetes worker 2"
-  type        = string
-  default     = "10.0.1.12"
+  default     = "ec2-user"
 }

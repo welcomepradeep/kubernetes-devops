@@ -6,14 +6,15 @@
 - name: Disable swap immediately
   ansible.builtin.command:
     cmd: swapoff -a
-  when: ansible_swaptotal_mb | int > 0
-  changed_when: true
+  become: true
+  changed_when: false
 
 - name: Remove swap entries from fstab
   ansible.builtin.replace:
     path: /etc/fstab
-    regexp: '^\s*([^#].*\s+swap\s+.*)$'
+    regexp: '^\s*([^#].*\sswap\s+.*)$'
     replace: '# \1'
+  become: true
 
 ############################################################
 # Kernel Modules
@@ -23,14 +24,16 @@
   community.general.modprobe:
     name: overlay
     state: present
+  become: true
 
 - name: Load br_netfilter module
   community.general.modprobe:
     name: br_netfilter
     state: present
+  become: true
 
 ############################################################
-# Persist Kernel Modules
+# Persistent Kernel Modules
 ############################################################
 
 - name: Configure Kubernetes kernel modules
@@ -42,12 +45,13 @@
     content: |
       overlay
       br_netfilter
+  become: true
 
 ############################################################
 # Kubernetes Sysctl Settings
 ############################################################
 
-- name: Configure Kubernetes sysctl parameters
+- name: Configure Kubernetes sysctl settings
   ansible.builtin.copy:
     dest: /etc/sysctl.d/k8s.conf
     owner: root
@@ -57,24 +61,28 @@
       net.bridge.bridge-nf-call-iptables = 1
       net.bridge.bridge-nf-call-ip6tables = 1
       net.ipv4.ip_forward = 1
+  become: true
 
-- name: Reload sysctl configuration
+- name: Apply sysctl settings
   ansible.builtin.command:
     cmd: sysctl --system
-  changed_when: true
+  become: true
+  changed_when: false
 
 ############################################################
 # Required Packages
 ############################################################
 
-- name: Install required OS packages
+- name: Install required packages
   ansible.builtin.dnf:
     name:
       - curl
       - wget
       - tar
       - socat
-      - conntrack-tools
+      - conntrack
       - iproute-tc
-      - ebtables
+      - iptables
+      - ca-certificates
     state: present
+  become: true
